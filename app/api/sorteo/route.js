@@ -1,5 +1,5 @@
-import { supabase } from "../../../../lib/supabase";
-import { derangementIndices } from "../../../../lib/derangement";
+import { supabase } from "../../../lib/supabase";
+import { derangementIndices } from "../../../lib/derangement";
 
 export async function POST(req) {
   try {
@@ -11,18 +11,24 @@ export async function POST(req) {
       .limit(1);
 
     if (gErr)
-      return new Response(JSON.stringify({ error: gErr.message }), {
-        status: 500,
-      });
+      return new Response(
+        JSON.stringify({ error: "supabase_error", message: gErr.message }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     if (!games || games.length === 0)
       return new Response(JSON.stringify({ error: "no_game" }), {
         status: 404,
+        headers: { "Content-Type": "application/json" },
       });
 
     const game = games[0];
     if (game.sorteo_realizado)
       return new Response(JSON.stringify({ error: "sorteo_already_done" }), {
         status: 400,
+        headers: { "Content-Type": "application/json" },
       });
 
     // fetch participants
@@ -33,13 +39,17 @@ export async function POST(req) {
       .order("created_at", { ascending: true });
 
     if (pErr)
-      return new Response(JSON.stringify({ error: pErr.message }), {
-        status: 500,
-      });
+      return new Response(
+        JSON.stringify({ error: "supabase_error", message: pErr.message }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     if (!participants || participants.length < 2)
       return new Response(
         JSON.stringify({ error: "need_at_least_two_participants" }),
-        { status: 400 }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
 
     const n = participants.length;
@@ -47,6 +57,7 @@ export async function POST(req) {
     if (!indices)
       return new Response(JSON.stringify({ error: "derangement_failed" }), {
         status: 500,
+        headers: { "Content-Type": "application/json" },
       });
 
     // Generate 10-char token and prepare updates & assignments
@@ -80,9 +91,13 @@ export async function POST(req) {
       .from("assignments")
       .insert(assignments);
     if (insErr)
-      return new Response(JSON.stringify({ error: insErr.message }), {
-        status: 500,
-      });
+      return new Response(
+        JSON.stringify({ error: "supabase_error", message: insErr.message }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
     // mark game as done
     const { error: updGameErr } = await supabase
@@ -90,15 +105,28 @@ export async function POST(req) {
       .update({ sorteo_realizado: true })
       .eq("id", game.id);
     if (updGameErr)
-      return new Response(JSON.stringify({ error: updGameErr.message }), {
-        status: 500,
-      });
+      return new Response(
+        JSON.stringify({
+          error: "supabase_error",
+          message: updGameErr.message,
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
-    return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (e) {
     return new Response(
-      JSON.stringify({ error: (e && e.message) || String(e) }),
-      { status: 500 }
+      JSON.stringify({
+        error: "internal_error",
+        message: (e && e.message) || String(e),
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 }

@@ -1,4 +1,4 @@
-import { supabase } from "../../../../lib/supabase";
+import { supabase } from "../../../lib/supabase";
 
 export async function GET(req) {
   try {
@@ -7,6 +7,7 @@ export async function GET(req) {
     if (!token)
       return new Response(JSON.stringify({ error: "missing_token" }), {
         status: 400,
+        headers: { "Content-Type": "application/json" },
       });
 
     // find participant by token
@@ -18,12 +19,17 @@ export async function GET(req) {
       .single();
 
     if (pErr)
-      return new Response(JSON.stringify({ error: pErr.message }), {
-        status: 500,
-      });
+      return new Response(
+        JSON.stringify({ error: "supabase_error", message: pErr.message }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     if (!p)
       return new Response(JSON.stringify({ error: "invalid_token" }), {
         status: 404,
+        headers: { "Content-Type": "application/json" },
       });
 
     // get assignment for this giver
@@ -35,12 +41,17 @@ export async function GET(req) {
       .single();
 
     if (aErr)
-      return new Response(JSON.stringify({ error: aErr.message }), {
-        status: 500,
-      });
+      return new Response(
+        JSON.stringify({ error: "supabase_error", message: aErr.message }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     if (!assign)
       return new Response(JSON.stringify({ error: "assignment_not_found" }), {
         status: 404,
+        headers: { "Content-Type": "application/json" },
       });
 
     // fetch receiver participant
@@ -52,12 +63,17 @@ export async function GET(req) {
       .single();
 
     if (rErr)
-      return new Response(JSON.stringify({ error: rErr.message }), {
-        status: 500,
-      });
+      return new Response(
+        JSON.stringify({ error: "supabase_error", message: rErr.message }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     if (!r)
       return new Response(JSON.stringify({ error: "receiver_not_found" }), {
         status: 404,
+        headers: { "Content-Type": "application/json" },
       });
 
     return new Response(
@@ -69,12 +85,15 @@ export async function GET(req) {
           gift_3: r.gift_3,
         },
       }),
-      { status: 200 }
+      { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (e) {
     return new Response(
-      JSON.stringify({ error: (e && e.message) || String(e) }),
-      { status: 500 }
+      JSON.stringify({
+        error: "internal_error",
+        message: (e && e.message) || String(e),
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 }

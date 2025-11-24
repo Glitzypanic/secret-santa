@@ -2,7 +2,7 @@
 
 import SecretSantaReveal from "@/components/secret-santa-reveal";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function RevealPage() {
@@ -55,11 +55,13 @@ export default function RevealPage() {
   return (
     <div className="min-h-screen bg-linear-to-br from-black via-slate-900 to-black relative overflow-hidden">
       <main className="relative z-10">
-        <SecretSantaReveal
-          participants={participants}
-          assignments={assignments}
-          onBack={() => router.push("/")}
-        />
+        <Suspense fallback={<div className="p-6">Cargando Reveal...</div>}>
+          <SecretSantaReveal
+            participants={participants}
+            assignments={assignments}
+            onBack={() => router.push("/")}
+          />
+        </Suspense>
       </main>
     </div>
   );
