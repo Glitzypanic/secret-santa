@@ -25,11 +25,30 @@ export async function POST(req) {
       });
 
     const game = games[0];
-    if (game.sorteo_realizado)
+
+    // Verificar si ya existen assignments para este juego
+    const { data: existingAssignments } = await supabase
+      .from("assignments")
+      .select("id")
+      .eq("game_id", game.id)
+      .limit(1);
+
+    if (
+      game.sorteo_realizado ||
+      (existingAssignments && existingAssignments.length > 0)
+    ) {
+      // Si no está marcado pero hay assignments, marcarlo ahora
+      if (!game.sorteo_realizado) {
+        await supabase
+          .from("games")
+          .update({ sorteo_realizado: true })
+          .eq("id", game.id);
+      }
       return new Response(JSON.stringify({ error: "sorteo_already_done" }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
+    }
 
     // fetch participants
     const { data: participants, error: pErr } = await supabase
@@ -46,11 +65,24 @@ export async function POST(req) {
           headers: { "Content-Type": "application/json" },
         }
       );
+    const expected = parseInt(process.env.EXPECTED_PARTICIPANTS || "6", 10);
     if (!participants || participants.length < 2)
       return new Response(
         JSON.stringify({ error: "need_at_least_two_participants" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
+
+    // Enforce expected participant count before running the draw
+    if (participants.length < expected) {
+      return new Response(
+        JSON.stringify({
+          error: "not_enough_participants",
+          required: expected,
+          current: participants.length,
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     const n = participants.length;
     const indices = derangementIndices(n);
