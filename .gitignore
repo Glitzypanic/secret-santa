@@ -20,3 +20,4 @@ yarn.lock
 secret-santa-backup-*.tar.gz
 secret-santa-backup-*.bundle
 node_modules
+.next_pid
