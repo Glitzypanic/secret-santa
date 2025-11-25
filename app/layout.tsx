@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { SecretSantaProvider } from "./secret-santa-context";
 import SnowEffect from "@/components/snow-effect";
+import BackgroundMusic from "@/components/background-music";
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -40,6 +41,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`font-sans antialiased`}>
         <SnowEffect />
+        <BackgroundMusic />
         <SecretSantaProvider>{children}</SecretSantaProvider>
         <Analytics />
       </body>
