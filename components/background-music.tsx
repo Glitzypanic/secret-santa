@@ -5,35 +5,47 @@ import { useEffect, useRef, useState } from "react";
 export default function BackgroundMusic() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [hasInteracted, setHasInteracted] = useState(false);
+  const [showPrompt, setShowPrompt] = useState(true);
 
   useEffect(() => {
-    // Los navegadores requieren interacción del usuario para reproducir audio
-    const handleInteraction = () => {
-      if (!hasInteracted && audioRef.current) {
-        audioRef.current
-          .play()
-          .then(() => {
-            setIsPlaying(true);
-            setHasInteracted(true);
-          })
-          .catch(() => {
-            // El usuario no ha interactuado aún
-          });
+    // Intentar reproducir automáticamente al cargar
+    const tryAutoPlay = async () => {
+      if (audioRef.current) {
+        try {
+          await audioRef.current.play();
+          setIsPlaying(true);
+          setShowPrompt(false);
+        } catch {
+          // Autoplay bloqueado, mostrar prompt
+          setShowPrompt(true);
+        }
       }
     };
 
-    // Intentar reproducir en cualquier interacción
+    tryAutoPlay();
+
+    // También intentar en cualquier interacción
+    const handleInteraction = () => {
+      if (!isPlaying && audioRef.current) {
+        audioRef.current.play().then(() => {
+          setIsPlaying(true);
+          setShowPrompt(false);
+        }).catch(() => {});
+      }
+    };
+
     document.addEventListener("click", handleInteraction);
     document.addEventListener("touchstart", handleInteraction);
     document.addEventListener("keydown", handleInteraction);
+    document.addEventListener("scroll", handleInteraction);
 
     return () => {
       document.removeEventListener("click", handleInteraction);
       document.removeEventListener("touchstart", handleInteraction);
       document.removeEventListener("keydown", handleInteraction);
+      document.removeEventListener("scroll", handleInteraction);
     };
-  }, [hasInteracted]);
+  }, [isPlaying]);
 
   const togglePlay = () => {
     if (audioRef.current) {
@@ -43,8 +55,17 @@ export default function BackgroundMusic() {
       } else {
         audioRef.current.play();
         setIsPlaying(true);
-        setHasInteracted(true);
+        setShowPrompt(false);
       }
+    }
+  };
+
+  const handleEnableMusic = () => {
+    if (audioRef.current) {
+      audioRef.current.play().then(() => {
+        setIsPlaying(true);
+        setShowPrompt(false);
+      });
     }
   };
 
@@ -56,6 +77,18 @@ export default function BackgroundMusic() {
         loop
         preload="auto"
       />
+
+      {/* Prompt para activar música */}
+      {showPrompt && !isPlaying && (
+        <div className="fixed bottom-20 right-4 z-50 animate-bounce">
+          <button
+            onClick={handleEnableMusic}
+            className="bg-[#c4a574] hover:bg-[#b8956a] text-slate-950 px-4 py-2 rounded-full shadow-lg font-semibold flex items-center gap-2 transition-all"
+          >
+            🎵 Activar música navideña
+          </button>
+        </div>
+      )}
 
       {/* Botón flotante para controlar la música */}
       <button
