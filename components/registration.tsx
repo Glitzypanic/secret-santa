@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 
 interface RegistrationProps {
   onParticipantAdded: (participant: any) => void;
@@ -18,8 +18,8 @@ export default function Registration({
   participantsCount,
 }: RegistrationProps) {
   const router = useRouter();
-  const [name, setName] = useState('');
-  const [gifts, setGifts] = useState(['', '', '']);
+  const [name, setName] = useState("");
+  const [gifts, setGifts] = useState(["", "", ""]);
   const [errors, setErrors] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
 
@@ -39,7 +39,7 @@ export default function Registration({
     const newErrors: string[] = [];
 
     if (!name.trim()) {
-      newErrors.push('El nombre es obligatorio');
+      newErrors.push("El nombre es obligatorio");
     }
 
     gifts.forEach((gift, index) => {
@@ -60,21 +60,39 @@ export default function Registration({
     };
 
     onParticipantAdded(participant);
-    setName('');
-    setGifts(['', '', '']);
+    setName("");
+    setGifts(["", "", ""]);
     setErrors([]);
     setSubmitted(true);
 
     setTimeout(() => {
-      router.push('/');
+      router.push("/");
     }, 1500);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8">
       <div className="max-w-2xl w-full">
-        <h1 className="text-4xl font-bold text-center text-stone-100 mb-2">Regístrate</h1>
+        <h1 className="text-4xl font-bold text-center text-stone-100 mb-2">
+          Regístrate
+        </h1>
         <div className="w-16 h-1 bg-[#c4a574] mx-auto mb-8"></div>
+
+        <div className="text-center mb-4">
+          <p className="text-stone-300">
+            Participantes registrados: <strong>{participantsCount}</strong>
+          </p>
+          {participantsCount < 6 ? (
+            <p className="text-yellow-300">
+              Faltan <strong>{6 - participantsCount}</strong> participantes para
+              habilitar el sorteo.
+            </p>
+          ) : (
+            <p className="text-green-300">
+              Se alcanzó el número mínimo de participantes para el sorteo.
+            </p>
+          )}
+        </div>
 
         <Card className="bg-slate-800 border-[#5a4a35] p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -95,7 +113,7 @@ export default function Registration({
             {/* Gifts Input */}
             <div>
               <label className="block text-stone-100 font-semibold mb-4">
-                3 Ideas de Regalo (máx. $20.000 c/u) *
+                3 Ideas de Regalo (máx. $20.000)*
               </label>
               <div className="space-y-3">
                 {gifts.map((gift, index) => (
@@ -128,7 +146,9 @@ export default function Registration({
             {/* Success Message */}
             {submitted && (
               <div className="bg-green-900 border border-green-700 rounded-lg p-4">
-                <p className="text-green-300">✓ ¡Registro exitoso! Volviendo al inicio...</p>
+                <p className="text-green-300">
+                  ✓ ¡Registro exitoso! Volviendo al inicio...
+                </p>
               </div>
             )}
 
@@ -141,15 +161,6 @@ export default function Registration({
                 >
                   Registrarme
                 </Button>
-                {participantsCount > 0 && (
-                  <Button
-                    type="button"
-                    onClick={onViewParticipants}
-                    className="flex-1 bg-slate-700 hover:bg-slate-600 text-stone-100 font-semibold py-3 rounded-lg"
-                  >
-                    Ver Participantes ({participantsCount})
-                  </Button>
-                )}
               </div>
             )}
           </form>

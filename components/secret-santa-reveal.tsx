@@ -19,8 +19,11 @@ export default function SecretSantaReveal({
   const [selectedParticipant, setSelectedParticipant] = useState("");
   const [revealed, setRevealed] = useState(false);
   const [secretSanta, setSecretSanta] = useState<any>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const searchParams = useSearchParams();
+
+  const assignmentsReady = Array.isArray(assignments) && assignments.length > 0;
 
   useEffect(() => {
     const sel = searchParams?.get("selected");
@@ -30,28 +33,43 @@ export default function SecretSantaReveal({
   }, [searchParams]);
 
   const handleReveal = () => {
-    if (!selectedParticipant) return;
+    setLocalError(null);
+    if (!selectedParticipant) {
+      setLocalError("Selecciona un nombre primero.");
+      return;
+    }
+
+    if (!assignmentsReady) {
+      setLocalError("El sorteo no se ha realizado aún.");
+      return;
+    }
 
     const assignment = assignments.find(
       (a) => String(a.from) === String(selectedParticipant)
     );
 
-    if (assignment) {
-      const santaRaw = participants.find(
-        (p) => String(p.id) === String(assignment.to)
-      );
-      if (santaRaw) {
-        const santa = {
-          name: santaRaw.name,
-          gifts: [santaRaw.gift_1, santaRaw.gift_2, santaRaw.gift_3].filter(
-            Boolean
-          ),
-        };
-        setSecretSanta(santa);
-        setRevealed(true);
-        triggerConfetti();
-      }
+    if (!assignment) {
+      setLocalError("No se encontró la asignación para ese participante.");
+      return;
     }
+
+    const santaRaw = participants.find(
+      (p) => String(p.id) === String(assignment.to)
+    );
+    if (!santaRaw) {
+      setLocalError("No se encontró la información del receptor.");
+      return;
+    }
+
+    const santa = {
+      name: santaRaw.name,
+      gifts: [santaRaw.gift_1, santaRaw.gift_2, santaRaw.gift_3].filter(
+        Boolean
+      ),
+    };
+    setSecretSanta(santa);
+    setRevealed(true);
+    triggerConfetti();
   };
 
   const triggerConfetti = () => {
@@ -141,9 +159,17 @@ export default function SecretSantaReveal({
                 ))}
               </select>
 
+              {!assignmentsReady && (
+                <p className="text-yellow-300 mb-4">
+                  El sorteo aún no se ha realizado. Pide al organizador que
+                  ejecute el sorteo para generar las asignaciones.
+                </p>
+              )}
+              {localError && <p className="text-red-400 mb-4">{localError}</p>}
+
               <Button
                 onClick={handleReveal}
-                disabled={!selectedParticipant}
+                disabled={!selectedParticipant || !assignmentsReady}
                 className="w-full bg-[#c4a574] hover:bg-[#b8956a] disabled:bg-slate-600 text-slate-950 font-semibold py-3 rounded-lg"
               >
                 ¡Ver Mi Amigo Secreto!
